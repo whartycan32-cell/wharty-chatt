@@ -1,195 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wharty Chat</title>
+<title>Wharty Kayıt</title>
 
 <style>
-body { margin:0; font-family:sans-serif; background:#f0f2f5; }
-
-#login, #loading {
-  height:100vh;
+body {
+  margin:0;
+  font-family:sans-serif;
+  background:#f0f2f5;
   display:flex;
-  flex-direction:column;
   justify-content:center;
   align-items:center;
+  height:100vh;
 }
 
-#loading { display:none; }
+.box {
+  background:white;
+  padding:30px;
+  border-radius:15px;
+  width:300px;
+  text-align:center;
+}
 
 input {
+  width:100%;
   padding:10px;
-  margin:5px;
+  margin-top:10px;
   border:none;
   border-radius:10px;
+  background:#eee;
 }
 
 button {
+  width:100%;
   padding:10px;
+  margin-top:15px;
   border:none;
   border-radius:10px;
   background:#4caf50;
   color:white;
+  cursor:pointer;
 }
 
-#app { display:none; height:100vh; flex-direction:column; }
-
-#chatBox {
-  flex:1;
-  padding:10px;
-  overflow:auto;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+#msg {
+  margin-top:10px;
 }
-
-.msg { padding:10px; border-radius:12px; max-width:70%; }
-.me { align-self:flex-end; background:#dcf8c6; }
-.other { align-self:flex-start; background:#eee; }
-
-.inputBox { display:flex; padding:10px; }
-.inputBox input { flex:1; padding:10px; border-radius:20px; border:none; }
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="login">
-  <h2>Wharty Sohbet</h2>
+<div class="box">
+  <h2>Kayıt Ol</h2>
 
   <input id="username" placeholder="Kullanıcı adı">
   <input id="password" type="password" placeholder="Şifre">
 
-  <button id="mainBtn">Kayıt Ol</button>
-  <p id="info"></p>
-</div>
+  <button onclick="register()">Kayıt Ol</button>
 
-<!-- LOADING -->
-<div id="loading">
-  <h2>Wharty Sohbet Yeri</h2>
-  <div style="width:200px;height:6px;background:#ddd;border-radius:10px;overflow:hidden;">
-    <div id="progress" style="height:100%;width:0%;background:#4caf50;"></div>
-  </div>
-</div>
-
-<!-- CHAT -->
-<div id="app">
-  <div id="chatBox"></div>
-
-  <div class="inputBox">
-    <input id="msg">
-    <button onclick="send()">Gönder</button>
-  </div>
+  <p id="msg"></p>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
 const socket = io();
-let myName = "";
-let mode = "register";
 
-const btn = document.getElementById("mainBtn");
-
-// BUTON TEK
-btn.onclick = () => {
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+function register(){
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
 
   if(!username || !password){
-    info.innerText = "Boş bırakma";
+    msg.innerText = "Boş bırakma";
+    msg.style.color = "red";
     return;
   }
 
-  if(mode === "register"){
-    socket.emit("register",{username,password});
-  } else {
-    socket.emit("login",{username,password});
-  }
-};
+  socket.emit("register", { username, password });
+}
 
-// KAYIT BAŞARILI
 socket.on("registerSuccess", ()=>{
-  btn.innerText = "Kayıt başarılı ✔";
-  info.style.color = "green";
+  msg.innerText = "Kayıt başarılı ✔";
+  msg.style.color = "green";
 
   setTimeout(()=>{
-    location.reload(); // F5 gibi
+    window.location.href = "login.html";
   },1000);
 });
 
-// LOGIN BAŞARILI
-socket.on("loginSuccess",(data)=>{
-  myName = data.username;
-
-  login.style.display="none";
-  loading.style.display="flex";
-
-  startLoading();
+socket.on("registerError",(m)=>{
+  msg.innerText = m;
+  msg.style.color = "red";
 });
-
-// LOGIN HATA
-socket.on("loginError",(msg)=>{
-  info.innerText = msg;
-});
-
-// SAYFA YENİLENİNCE GİRİŞ MODU
-window.onload = () => {
-  if(localStorage.getItem("registered")){
-    mode = "login";
-    btn.innerText = "Giriş Yap";
-  }
-};
-
-// KAYIT FLAG
-socket.on("registerSuccess", ()=>{
-  localStorage.setItem("registered", "1");
-});
-
-// LOADING
-function startLoading(){
-  let w=0;
-  let i=setInterval(()=>{
-    w++;
-    progress.style.width=w+"%";
-
-    if(w>=100){
-      clearInterval(i);
-      loading.style.display="none";
-      app.style.display="flex";
-    }
-  },30);
-}
-
-// CHAT
-socket.on("loadMessages",(msgs)=>{
-  msgs.forEach(addMessage);
-});
-
-socket.on("newMessage",(msg)=>{
-  addMessage(msg);
-});
-
-function send(){
-  const text = msg.value;
-  if(!text) return;
-
-  socket.emit("sendMessage",text);
-  msg.value="";
-}
-
-function addMessage(m){
-  const d=document.createElement("div");
-  d.classList.add("msg");
-
-  if(m.user===myName) d.classList.add("me");
-  else d.classList.add("other");
-
-  d.innerText = m.user + ": " + m.text;
-
-  chatBox.appendChild(d);
-}
 </script>
 
 </body>
