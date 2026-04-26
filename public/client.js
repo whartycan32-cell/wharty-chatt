@@ -45,7 +45,24 @@ socket.on("loadMessages", (msgs) => {
 socket.on("receiveDM", (msg) => {
   if(msg.from === currentChat || msg.to === currentChat){
     const div = document.createElement("div");
-    div.innerText = msg.from + ": " + msg.text;
+   function addMessage(msg){
+  const div = document.createElement("div");
+
+  div.classList.add("msg");
+
+  if(msg.from === myName){
+    div.classList.add("me");
+  } else {
+    div.classList.add("other");
+  }
+
+  div.innerHTML = `
+    ${msg.text}
+    <div class="time">${msg.time || ""}</div>
+  `;
+
+  document.getElementById("chatBox").appendChild(div);
+}
     document.getElementById("chatBox").appendChild(div);
   }
 });
