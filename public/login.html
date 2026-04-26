@@ -13,9 +13,7 @@ body {
   height:100vh;
   font-family:sans-serif;
 }
-.box {
-  text-align:center;
-}
+.box { text-align:center; }
 input {
   padding:10px;
   border:none;
@@ -34,7 +32,7 @@ button {
 <body>
 
 <div class="box">
-  <h1>Özel Sohbet</h1>
+  <h1>Özel Sohbet Programı</h1>
   <input id="name" placeholder="Adın ne">
   <br>
   <button onclick="go()">Giriş</button>
@@ -46,7 +44,6 @@ function go(){
   if(!name) return;
 
   localStorage.setItem("name", name);
-
   window.location.href = "chat.html";
 }
 </script>
