@@ -9,53 +9,45 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-let users = {};
-let messages = fs.existsSync("messages.json")
-  ? JSON.parse(fs.readFileSync("messages.json"))
-  : {};
+const MSG_FILE = "messages.json";
+const LOG_FILE = "logs.txt";
+
+let messages = fs.existsSync(MSG_FILE)
+  ? JSON.parse(fs.readFileSync(MSG_FILE))
+  : [];
 
 function saveMessages() {
-  fs.writeFileSync("messages.json", JSON.stringify(messages, null, 2));
+  fs.writeFileSync(MSG_FILE, JSON.stringify(messages, null, 2));
+}
+
+function saveLog(msg) {
+  const line = `[${msg.time}] ${msg.user}: ${msg.text}\n`;
+  fs.appendFileSync(LOG_FILE, line);
 }
 
 io.on("connection", (socket) => {
 
   socket.on("join", (username) => {
     socket.username = username;
-    users[socket.id] = username;
 
-    io.emit("userList", Object.values(users));
+    // eski mesajları gönder
+    socket.emit("loadMessages", messages);
   });
 
-  socket.on("getMessages", (withUser) => {
-    const key = [socket.username, withUser].sort().join("-");
-    socket.emit("loadMessages", messages[key] || []);
-  });
-
-  socket.on("sendDM", ({ to, text }) => {
-    const from = socket.username;
-    if (!from) return;
-
-    const key = [from, to].sort().join("-");
-
-    if (!messages[key]) messages[key] = [];
+  socket.on("sendMessage", (text) => {
+    if (!socket.username) return;
 
     const msg = {
-      from,
-      to,
+      user: socket.username,
       text,
       time: new Date().toLocaleTimeString()
     };
 
-    messages[key].push(msg);
+    messages.push(msg);
     saveMessages();
+    saveLog(msg);
 
-    io.emit("receiveDM", msg);
-  });
-
-  socket.on("disconnect", () => {
-    delete users[socket.id];
-    io.emit("userList", Object.values(users));
+    io.emit("newMessage", msg);
   });
 
 });
