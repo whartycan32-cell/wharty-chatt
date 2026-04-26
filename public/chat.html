@@ -1,19 +1,65 @@
 <!DOCTYPE html>
 <html>
-<body style="margin:0;font-family:sans-serif;">
+<head>
+<style>
+body {margin:0;font-family:sans-serif;}
 
-<div id="loading" style="height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;">
+#loading {
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+}
+
+.bar {
+  width:200px;
+  height:6px;
+  background:#ddd;
+}
+
+.progress {
+  height:100%;
+  width:0%;
+  background:#4caf50;
+}
+
+#app {
+  display:none;
+  height:100vh;
+  flex-direction:column;
+}
+
+#chat {
+  flex:1;
+  overflow:auto;
+  padding:10px;
+}
+
+.msg { margin:5px 0; }
+
+.inputBox {
+  display:flex;
+  padding:10px;
+}
+.inputBox input { flex:1; }
+</style>
+</head>
+
+<body>
+
+<div id="loading">
   <h2>Wharty Sohbet</h2>
-  <div style="width:200px;height:6px;background:#ddd;">
-    <div id="bar" style="height:100%;width:0;background:green;"></div>
+  <div class="bar">
+    <div class="progress" id="bar"></div>
   </div>
 </div>
 
-<div id="app" style="display:none;height:100vh;flex-direction:column;">
-  <div id="chat" style="flex:1;overflow:auto;padding:10px;"></div>
+<div id="app">
+  <div id="chat"></div>
 
-  <div style="display:flex;padding:10px;">
-    <input id="msg" style="flex:1;">
+  <div class="inputBox">
+    <input id="msg">
     <button onclick="send()">Gönder</button>
   </div>
 </div>
@@ -25,8 +71,11 @@ const user = localStorage.getItem("user");
 
 if(!user) location.href="login.html";
 
-// DOĞRU LOGIN (FIX)
-s.emit("login",{username:user,password:usersPass});
+// ⚠️ BURASI FIX
+s.on("connect",()=>{
+  // sadece giriş yaptığını söyle (şifre tekrar istemiyoruz)
+  s.username = user;
+});
 
 // LOADING
 let w=0;
@@ -49,12 +98,15 @@ s.on("loadMessages",(msgs)=>{
 s.on("newMessage",(m)=>add(m));
 
 function send(){
+  if(!msg.value) return;
+
   s.emit("sendMessage",msg.value);
   msg.value="";
 }
 
 function add(m){
   const d=document.createElement("div");
+  d.className="msg";
   d.innerText=m.user+": "+m.text;
   chat.appendChild(d);
 }
