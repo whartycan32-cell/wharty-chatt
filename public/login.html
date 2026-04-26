@@ -1,12 +1,60 @@
 <!DOCTYPE html>
 <html>
-<body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giriş</title>
 
-<div>
+<style>
+body {
+  margin:0;
+  font-family:sans-serif;
+  background:linear-gradient(135deg,#2196f3,#1565c0);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.box {
+  background:white;
+  padding:30px;
+  border-radius:20px;
+  width:90%;
+  max-width:350px;
+  text-align:center;
+}
+
+input {
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:#eee;
+}
+
+button {
+  width:100%;
+  padding:12px;
+  margin-top:15px;
+  border:none;
+  border-radius:10px;
+  background:#2196f3;
+  color:white;
+  font-size:16px;
+}
+
+#msg { margin-top:10px; }
+</style>
+</head>
+
+<body>
+
+<div class="box">
   <h2>Giriş Yap</h2>
 
-  <input id="u" placeholder="Kullanıcı adı"><br><br>
-  <input id="p" type="password" placeholder="Şifre"><br><br>
+  <input id="u" placeholder="Kullanıcı adı">
+  <input id="p" type="password" placeholder="Şifre">
 
   <button onclick="login()">Giriş</button>
 
@@ -22,7 +70,7 @@ function login(){
 }
 
 s.on("loginSuccess",(d)=>{
-  localStorage.setItem("user", d.username);
+  localStorage.setItem("user",d.username);
   location.href="chat.html";
 });
 
