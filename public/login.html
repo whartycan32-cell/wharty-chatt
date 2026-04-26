@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giriş</title>
+<style>
+body {
+  background:#0b1f14;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  font-family:sans-serif;
+}
+.box {
+  text-align:center;
+}
+input {
+  padding:10px;
+  border:none;
+  border-radius:10px;
+}
+button {
+  padding:10px;
+  background:#25d366;
+  border:none;
+  border-radius:10px;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h1>Özel Sohbet</h1>
+  <input id="name" placeholder="Adın ne">
+  <br>
+  <button onclick="go()">Giriş</button>
+</div>
+
+<script>
+function go(){
+  const name = document.getElementById("name").value;
+  if(!name) return;
+
+  localStorage.setItem("name", name);
+
+  window.location.href = "chat.html";
+}
+</script>
+
+</body>
+</html>
