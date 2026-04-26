@@ -1,114 +1,350 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wharty Chat</title>
+
 <style>
-body {margin:0;font-family:sans-serif;}
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #0b1724;
+  color: white;
+  height: 100vh;
+  overflow: hidden;
+}
 
 #loading {
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
+  height: 100vh;
+  background: radial-gradient(circle at top, #1c8bff, #07111d 65%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.bar {
-  width:200px;
-  height:6px;
-  background:#ddd;
+#loading h1 {
+  font-size: 28px;
+  margin-bottom: 18px;
 }
 
-.progress {
-  height:100%;
-  width:0%;
-  background:#4caf50;
+.loadingBar {
+  width: 240px;
+  height: 8px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+#bar {
+  width: 0%;
+  height: 100%;
+  background: white;
+  border-radius: 99px;
 }
 
 #app {
-  display:none;
-  height:100vh;
-  flex-direction:column;
+  display: none;
+  height: 100vh;
 }
 
-#chat {
-  flex:1;
-  overflow:auto;
-  padding:10px;
+.sidebar {
+  width: 300px;
+  background: #073b2f;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
 }
 
-.msg { margin:5px 0; }
+.sideHeader {
+  padding: 18px;
+  font-size: 21px;
+  font-weight: 800;
+  background: #052d24;
+}
+
+#users {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.userItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  border-radius: 16px;
+  margin-bottom: 8px;
+  background: rgba(255,255,255,0.06);
+}
+
+.avatar {
+  width: 43px;
+  height: 43px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #16e0a0, #0a8f68);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  color: white;
+}
+
+.chatArea {
+  flex: 1;
+  background: linear-gradient(180deg, #1c8bff, #0e5db6);
+  display: flex;
+  flex-direction: column;
+}
+
+.chatHeader {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  background: rgba(0,0,0,0.22);
+  font-weight: 800;
+}
+
+#chatBox {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.msg {
+  max-width: 72%;
+  padding: 11px 14px;
+  border-radius: 18px;
+  background: #050505;
+  color: white;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+  word-wrap: break-word;
+}
+
+.msg.me {
+  align-self: flex-end;
+  border-bottom-right-radius: 5px;
+}
+
+.msg.other {
+  align-self: flex-start;
+  border-bottom-left-radius: 5px;
+}
+
+.name {
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.time {
+  font-size: 10px;
+  opacity: 0.55;
+  text-align: right;
+  margin-top: 5px;
+}
 
 .inputBox {
-  display:flex;
-  padding:10px;
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  background: rgba(0,0,0,0.25);
 }
-.inputBox input { flex:1; }
+
+.inputBox input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 14px 16px;
+  border-radius: 22px;
+  background: white;
+  color: #111;
+  font-size: 15px;
+}
+
+.inputBox button {
+  border: none;
+  border-radius: 22px;
+  padding: 0 20px;
+  background: #050505;
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  #app {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: 115px;
+    flex-direction: column;
+  }
+
+  .sideHeader {
+    padding: 10px 14px;
+    font-size: 17px;
+  }
+
+  #users {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px;
+  }
+
+  .userItem {
+    min-width: 120px;
+    margin-right: 8px;
+    margin-bottom: 0;
+  }
+
+  .chatArea {
+    flex: 1;
+  }
+
+  .msg {
+    max-width: 82%;
+  }
+}
 </style>
 </head>
 
 <body>
 
 <div id="loading">
-  <h2>Wharty Sohbet</h2>
-  <div class="bar">
-    <div class="progress" id="bar"></div>
+  <h1>Wharty Sohbet Yeri</h1>
+  <div class="loadingBar">
+    <div id="bar"></div>
   </div>
 </div>
 
 <div id="app">
-  <div id="chat"></div>
+  <div class="sidebar">
+    <div class="sideHeader">Çevrimiçi Kişiler</div>
+    <div id="users"></div>
+  </div>
 
-  <div class="inputBox">
-    <input id="msg">
-    <button onclick="send()">Gönder</button>
+  <div class="chatArea">
+    <div class="chatHeader">Sohbet Alanı</div>
+
+    <div id="chatBox"></div>
+
+    <div class="inputBox">
+      <input id="msg" placeholder="Mesaj yaz...">
+      <button onclick="send()">Gönder</button>
+    </div>
   </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-const s = io();
-const user = localStorage.getItem("user");
+const socket = io();
 
-if(!user) location.href="login.html";
+const username = localStorage.getItem("whartyUser");
+const password = localStorage.getItem("whartyPass");
 
-// ⚠️ BURASI FIX
-s.on("connect",()=>{
-  // sadece giriş yaptığını söyle (şifre tekrar istemiyoruz)
-  s.username = user;
-});
-
-// LOADING
-let w=0;
-let i=setInterval(()=>{
-  w++;
-  bar.style.width=w+"%";
-
-  if(w>=100){
-    clearInterval(i);
-    loading.style.display="none";
-    app.style.display="flex";
-  }
-},30);
-
-// MESAJ
-s.on("loadMessages",(msgs)=>{
-  msgs.forEach(add);
-});
-
-s.on("newMessage",(m)=>add(m));
-
-function send(){
-  if(!msg.value) return;
-
-  s.emit("sendMessage",msg.value);
-  msg.value="";
+if (!username || !password) {
+  location.href = "login.html";
 }
 
-function add(m){
-  const d=document.createElement("div");
-  d.className="msg";
-  d.innerText=m.user+": "+m.text;
-  chat.appendChild(d);
+socket.emit("login", { username, password });
+
+socket.on("loginError", () => {
+  location.href = "login.html";
+});
+
+socket.on("loginSuccess", () => {
+  startLoading();
+});
+
+socket.on("loadMessages", (msgs) => {
+  document.getElementById("chatBox").innerHTML = "";
+  msgs.forEach(addMessage);
+});
+
+socket.on("newMessage", (m) => {
+  addMessage(m);
+});
+
+socket.on("onlineUsers", (list) => {
+  const usersDiv = document.getElementById("users");
+  usersDiv.innerHTML = "";
+
+  list.forEach(name => {
+    const div = document.createElement("div");
+    div.className = "userItem";
+    div.innerHTML = `
+      <div class="avatar">${name.charAt(0).toUpperCase()}</div>
+      <div>${escapeHtml(name)}</div>
+    `;
+    usersDiv.appendChild(div);
+  });
+});
+
+function startLoading() {
+  let w = 0;
+  const interval = setInterval(() => {
+    w++;
+    document.getElementById("bar").style.width = w + "%";
+
+    if (w >= 100) {
+      clearInterval(interval);
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("app").style.display = "flex";
+    }
+  }, 30);
+}
+
+function send() {
+  const input = document.getElementById("msg");
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  socket.emit("sendMessage", text);
+  input.value = "";
+}
+
+document.getElementById("msg").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") send();
+});
+
+function addMessage(m) {
+  const div = document.createElement("div");
+  div.className = "msg " + (m.user === username ? "me" : "other");
+
+  div.innerHTML = `
+    <div class="name">${escapeHtml(m.user)}</div>
+    <div>${escapeHtml(m.text)}</div>
+    <div class="time">${m.time || ""}</div>
+  `;
+
+  const box = document.getElementById("chatBox");
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 </script>
 
