@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wharty Chat</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="loginBox">
+    <h2>Adın ne?</h2>
+    <input id="username" placeholder="İsmini yaz">
+    <button onclick="join()">Giriş</button>
+  </div>
+</div>
+
+<div id="chatApp" class="hidden">
+  <div id="messages"></div>
+
+  <div class="messageBox">
+    <input id="msg" placeholder="Mesaj yaz...">
+    <button onclick="send()">Gönder</button>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js"></script>
+
+</body>
+</html>
