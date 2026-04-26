@@ -1,120 +1,62 @@
 <!DOCTYPE html>
 <html>
-<head>
-<style>
-body{margin:0;font-family:sans-serif;background:#f0f2f5;}
-.container{display:flex;height:100vh;}
-.sidebar{width:30%;background:#fff;overflow:auto;}
-.user{display:flex;padding:10px;cursor:pointer;}
-.avatar{width:35px;height:35px;border-radius:50%;background:#4caf50;color:white;display:flex;align-items:center;justify-content:center;margin-right:10px;}
-.chat{flex:1;display:flex;flex-direction:column;}
-#chatBox{flex:1;padding:10px;overflow:auto;display:flex;flex-direction:column;gap:10px;}
-.msg{padding:10px;border-radius:12px;max-width:70%;}
-.me{align-self:flex-end;background:#dcf8c6;}
-.other{align-self:flex-start;background:#eee;}
-.inputBox{display:flex;padding:10px;}
-.inputBox input{flex:1;padding:10px;border-radius:20px;border:none;}
-</style>
-</head>
+<body style="margin:0;font-family:sans-serif;">
 
-<body>
-
-<audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
-
-<div class="container">
-
-<div class="sidebar">
-<input id="search" placeholder="Ara..." oninput="searchUser()">
-<div id="results"></div>
-<hr>
-<div id="friends"></div>
+<div id="loading" style="height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;">
+  <h2>Wharty Sohbet</h2>
+  <div style="width:200px;height:6px;background:#ddd;">
+    <div id="bar" style="height:100%;width:0;background:green;"></div>
+  </div>
 </div>
 
-<div class="chat">
-<div id="chatBox"></div>
+<div id="app" style="display:none;height:100vh;flex-direction:column;">
+  <div id="chat" style="flex:1;overflow:auto;padding:10px;"></div>
 
-<div class="inputBox">
-<input id="msg">
-<button onclick="send()">Gönder</button>
-</div>
-</div>
-
+  <div style="display:flex;padding:10px;">
+    <input id="msg" style="flex:1;">
+    <button onclick="send()">Gönder</button>
+  </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-const s=io();
-const user=localStorage.getItem("user");
+const s = io();
+const user = localStorage.getItem("user");
 
-let current="";
+if(!user) location.href="login.html";
 
-s.emit("login",{username:user,password:"dummy"});
+// DOĞRU LOGIN (FIX)
+s.emit("login",{username:user,password:usersPass});
 
-s.on("loginSuccess",(d)=>{
-updateFriends(d.friends);
+// LOADING
+let w=0;
+let i=setInterval(()=>{
+  w++;
+  bar.style.width=w+"%";
 
-d.requests.forEach(r=>{
-const el=document.createElement("div");
-el.innerHTML=r+" <button onclick='accept(\""+r+"\")'>Kabul</button>";
-document.body.appendChild(el);
-});
-});
+  if(w>=100){
+    clearInterval(i);
+    loading.style.display="none";
+    app.style.display="flex";
+  }
+},30);
 
-function updateFriends(list){
-friends.innerHTML="";
-list.forEach(u=>{
-const el=document.createElement("div");
-el.className="user";
-el.innerHTML="<div class='avatar'>"+u[0]+"</div>"+u;
-el.onclick=()=>{
-current=u;
-s.emit("getDM",u);
-};
-friends.appendChild(el);
-});
-}
-
-function searchUser(){ s.emit("searchUser",search.value); }
-
-s.on("searchResult",(list)=>{
-results.innerHTML="";
-list.forEach(u=>{
-results.innerHTML+=u+" <button onclick='add(\""+u+"\")'>+</button><br>";
-});
+// MESAJ
+s.on("loadMessages",(msgs)=>{
+  msgs.forEach(add);
 });
 
-function add(u){ s.emit("sendRequest",u); }
-function accept(u){ s.emit("acceptRequest",u); }
-
-s.on("loadDM",(msgs)=>{
-chatBox.innerHTML="";
-msgs.forEach(addMsg);
-});
-
-s.on("newDM",({key,msg})=>{
-if(current && key.includes(current)){
-addMsg(msg);
-}else{
-sound.play();
-}
-});
+s.on("newMessage",(m)=>add(m));
 
 function send(){
-if(!msg.value||!current)return;
-s.emit("sendDM",{to:current,text:msg.value});
-msg.value="";
+  s.emit("sendMessage",msg.value);
+  msg.value="";
 }
 
-function addMsg(m){
-const d=document.createElement("div");
-d.className="msg";
-
-if(m.from===user)d.classList.add("me");
-else d.classList.add("other");
-
-d.innerText=m.text+(m.seen?" ✔✔":" ✔");
-
-chatBox.appendChild(d);
+function add(m){
+  const d=document.createElement("div");
+  d.innerText=m.user+": "+m.text;
+  chat.appendChild(d);
 }
 </script>
 
