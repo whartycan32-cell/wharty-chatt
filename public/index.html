@@ -2,16 +2,24 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wharty Sohbet</title>
+<title>Wharty Chat</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- LOADING -->
-<div id="loading">
-  <h1>Wharty Sohbet Yeri</h1>
+<!-- LOGIN -->
+<div id="login">
+  <h2>Wharty Sohbet</h2>
+  <input id="username" placeholder="Kullanıcı adı">
+  <input id="password" type="password" placeholder="Şifre">
+  <button onclick="startLogin()">Giriş</button>
+  <p id="error"></p>
+</div>
 
+<!-- LOADING -->
+<div id="loading" class="hidden">
+  <h1>Wharty Sohbet Yeri</h1>
   <div class="bar">
     <div class="progress" id="progress"></div>
   </div>
