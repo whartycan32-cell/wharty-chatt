@@ -23,9 +23,22 @@ socket.on("userList", (list) => {
     el.onclick = () => {
       currentChat = u;
       document.getElementById("chatBox").innerHTML = "";
+
+      socket.emit("getMessages", u);
     };
 
     div.appendChild(el);
+  });
+});
+
+socket.on("loadMessages", (msgs) => {
+  const box = document.getElementById("chatBox");
+  box.innerHTML = "";
+
+  msgs.forEach(m => {
+    const div = document.createElement("div");
+    div.innerText = m.from + ": " + m.text;
+    box.appendChild(div);
   });
 });
 
