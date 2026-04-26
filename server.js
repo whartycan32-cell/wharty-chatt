@@ -9,21 +9,28 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-// DOSYALAR
+const USERS_FILE = "users.json";
 const MSG_FILE = "messages.json";
 const LOG_FILE = "logs.txt";
 
-// MESAJLARI YÜKLE
+// kullanıcılar
+let users = fs.existsSync(USERS_FILE)
+  ? JSON.parse(fs.readFileSync(USERS_FILE))
+  : {};
+
+// mesajlar
 let messages = fs.existsSync(MSG_FILE)
   ? JSON.parse(fs.readFileSync(MSG_FILE))
   : [];
 
-// KAYDET
+function saveUsers() {
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+}
+
 function saveMessages() {
   fs.writeFileSync(MSG_FILE, JSON.stringify(messages, null, 2));
 }
 
-// LOG YAZ
 function saveLog(msg) {
   const line = `[${msg.time}] ${msg.user}: ${msg.text}\n`;
   fs.appendFileSync(LOG_FILE, line);
@@ -31,10 +38,26 @@ function saveLog(msg) {
 
 io.on("connection", (socket) => {
 
-  socket.on("join", (username) => {
+  socket.on("login", ({ username, password }) => {
+
+    if (!username || !password) {
+      socket.emit("loginError", "Boş bırakma");
+      return;
+    }
+
+    if (users[username]) {
+      if (users[username] !== password) {
+        socket.emit("loginError", "Şifre yanlış");
+        return;
+      }
+    } else {
+      users[username] = password;
+      saveUsers();
+    }
+
     socket.username = username;
 
-    // eski mesajları gönder
+    socket.emit("loginSuccess", username);
     socket.emit("loadMessages", messages);
   });
 
@@ -47,21 +70,13 @@ io.on("connection", (socket) => {
       time: new Date().toLocaleTimeString()
     };
 
-    // hafızaya ekle
     messages.push(msg);
-
-    // dosyaya kaydet
     saveMessages();
-
-    // log kaydet
     saveLog(msg);
 
-    // herkese gönder
     io.emit("newMessage", msg);
   });
 
 });
 
-server.listen(3000, () => {
-  console.log("Çalışıyor...");
-});
+server.listen(3000);
