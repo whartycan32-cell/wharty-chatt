@@ -2,36 +2,29 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wharty Chat</title>
+<title>Wharty Sohbet</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="login">
-  <h1>Özel Sohbet Programı</h1>
-  <input id="name" placeholder="İsmini yaz">
-  <button onclick="enter()">Giriş</button>
-</div>
-
 <!-- LOADING -->
-<div id="loading" class="hidden">
-  <h2>Sohbetleriniz yükleniyor...</h2>
+<div id="loading">
+  <h1>Wharty Sohbet Yeri</h1>
+
+  <div class="bar">
+    <div class="progress" id="progress"></div>
+  </div>
 </div>
 
 <!-- CHAT -->
 <div id="app" class="hidden">
 
-  <div class="sidebar" id="users"></div>
+  <div id="chatBox"></div>
 
-  <div class="chat">
-    <div id="chatBox"></div>
-
-    <div class="inputBox">
-      <input id="msg">
-      <button onclick="send()">Gönder</button>
-    </div>
+  <div class="inputBox">
+    <input id="msg" placeholder="Mesaj yaz...">
+    <button onclick="send()">Gönder</button>
   </div>
 
 </div>
