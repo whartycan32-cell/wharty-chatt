@@ -35,7 +35,8 @@ socket.on("loadMessages", (msgs) => {
   const box = document.getElementById("chatBox");
   box.innerHTML = "";
 
-  msgs.forEach(m => {
+  msgs.forEach(addMessage);
+});
     const div = document.createElement("div");
     div.innerText = m.from + ": " + m.text;
     box.appendChild(div);
@@ -44,8 +45,9 @@ socket.on("loadMessages", (msgs) => {
 
 socket.on("receiveDM", (msg) => {
   if(msg.from === currentChat || msg.to === currentChat){
-    const div = document.createElement("div");
-   function addMessage(msg){
+    addMessage(msg);
+  }
+});
   const div = document.createElement("div");
 
   div.classList.add("msg");
