@@ -2,7 +2,6 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const fs = require("fs");
-const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
@@ -11,10 +10,12 @@ const io = new Server(server);
 app.use(express.static("public"));
 
 let users = {};
-let messages = {};
+let messages = fs.existsSync("messages.json")
+  ? JSON.parse(fs.readFileSync("messages.json"))
+  : {};
 
-function log(msg) {
-  fs.appendFileSync("chatlog.txt", msg + "\n");
+function saveMessages() {
+  fs.writeFileSync("messages.json", JSON.stringify(messages, null, 2));
 }
 
 io.on("connection", (socket) => {
@@ -24,6 +25,11 @@ io.on("connection", (socket) => {
     users[socket.id] = username;
 
     io.emit("userList", Object.values(users));
+  });
+
+  socket.on("getMessages", (withUser) => {
+    const key = [socket.username, withUser].sort().join("-");
+    socket.emit("loadMessages", messages[key] || []);
   });
 
   socket.on("sendDM", ({ to, text }) => {
@@ -42,8 +48,7 @@ io.on("connection", (socket) => {
     };
 
     messages[key].push(msg);
-
-    log(`[${msg.time}] ${from} -> ${to}: ${text}`);
+    saveMessages();
 
     io.emit("receiveDM", msg);
   });
