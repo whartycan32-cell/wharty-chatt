@@ -1,60 +1,71 @@
 const socket = io();
 
-// otomatik isim (2 kişi için yeterli)
-let myName = "User_" + Math.floor(Math.random() * 1000);
+let myName = "";
 
-// loading animasyonu (3 saniye)
-let progress = document.getElementById("progress");
-let width = 0;
+// LOGIN
+function startLogin() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
 
-let interval = setInterval(() => {
-  width += 1;
-  progress.style.width = width + "%";
+  socket.emit("login", { username, password });
+}
 
-  if (width >= 100) {
-    clearInterval(interval);
+socket.on("loginError", (msg) => {
+  document.getElementById("error").innerText = msg;
+});
 
-    document.getElementById("loading").style.display = "none";
-    document.getElementById("app").classList.remove("hidden");
+// BAŞARILI LOGIN
+socket.on("loginSuccess", (name) => {
+  myName = name;
 
-    socket.emit("join", myName);
-  }
-}, 30);
+  document.getElementById("login").style.display = "none";
+  document.getElementById("loading").classList.remove("hidden");
 
-// eski mesajlar
+  // LOADING ANİMASYON
+  let progress = document.getElementById("progress");
+  let width = 0;
+
+  let interval = setInterval(() => {
+    width += 1;
+    progress.style.width = width + "%";
+
+    if (width >= 100) {
+      clearInterval(interval);
+
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("app").classList.remove("hidden");
+    }
+  }, 30);
+});
+
+// MESAJLAR
 socket.on("loadMessages", (msgs) => {
   msgs.forEach(addMessage);
 });
 
-// yeni mesaj
 socket.on("newMessage", (msg) => {
   addMessage(msg);
 });
 
-// gönder
-function send(){
+function send() {
   const text = document.getElementById("msg").value;
-  if(!text) return;
+  if (!text) return;
 
   socket.emit("sendMessage", text);
   document.getElementById("msg").value = "";
 }
 
-// mesaj ekleme
-function addMessage(msg){
+function addMessage(msg) {
   const div = document.createElement("div");
   div.classList.add("msg");
 
-  if(msg.user === myName){
+  if (msg.user === myName) {
     div.classList.add("me");
   } else {
     div.classList.add("other");
   }
 
-  div.innerHTML = `
-    ${msg.text}
-    <div class="time">${msg.time}</div>
-  `;
+  div.innerText = msg.user + ": " + msg.text;
 
   document.getElementById("chatBox").appendChild(div);
 }
