@@ -3,7 +3,114 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wharty Chat</title>
-<link rel="stylesheet" href="style.css">
+
+<style>
+body {
+  margin:0;
+  font-family:sans-serif;
+  background:#f0f2f5;
+}
+
+/* LOGIN */
+#login {
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+input {
+  padding:10px;
+  margin:5px;
+  border:none;
+  border-radius:10px;
+}
+
+button {
+  padding:10px 15px;
+  border:none;
+  border-radius:10px;
+  background:#4caf50;
+  color:white;
+}
+
+/* LOADING */
+#loading {
+  height:100vh;
+  display:none;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+.bar {
+  width:200px;
+  height:6px;
+  background:#ddd;
+  border-radius:10px;
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.progress {
+  height:100%;
+  width:0%;
+  background:#4caf50;
+}
+
+/* CHAT */
+#app {
+  display:none;
+  max-width:600px;
+  margin:auto;
+  height:100vh;
+  flex-direction:column;
+}
+
+#chatBox {
+  flex:1;
+  padding:15px;
+  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.msg {
+  max-width:70%;
+  padding:10px;
+  border-radius:12px;
+}
+
+.me {
+  align-self:flex-end;
+  background:#dcf8c6;
+}
+
+.other {
+  align-self:flex-start;
+  background:#eeeeee;
+}
+
+.inputBox {
+  display:flex;
+  padding:10px;
+  border-top:1px solid #ddd;
+}
+
+.inputBox input {
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:20px;
+  background:#f0f2f5;
+}
+
+.inputBox button {
+  margin-left:10px;
+}
+</style>
 </head>
 
 <body>
@@ -13,32 +120,105 @@
   <h2>Wharty Sohbet</h2>
   <input id="username" placeholder="Kullanıcı adı">
   <input id="password" type="password" placeholder="Şifre">
-  <button onclick="startLogin()">Giriş</button>
+  <button onclick="login()">Giriş</button>
   <p id="error"></p>
 </div>
 
 <!-- LOADING -->
-<div id="loading" class="hidden">
-  <h1>Wharty Sohbet Yeri</h1>
+<div id="loading">
+  <h2>Wharty Sohbet Yeri</h2>
   <div class="bar">
     <div class="progress" id="progress"></div>
   </div>
 </div>
 
 <!-- CHAT -->
-<div id="app" class="hidden">
-
+<div id="app">
   <div id="chatBox"></div>
 
   <div class="inputBox">
     <input id="msg" placeholder="Mesaj yaz...">
     <button onclick="send()">Gönder</button>
   </div>
-
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="client.js"></script>
+
+<script>
+const socket = io();
+let myName = "";
+
+// LOGIN
+function login(){
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  socket.emit("login", { username, password });
+}
+
+socket.on("loginError", (msg)=>{
+  document.getElementById("error").innerText = msg;
+});
+
+socket.on("loginSuccess", (name)=>{
+  myName = name;
+
+  document.getElementById("login").style.display = "none";
+  document.getElementById("loading").style.display = "flex";
+
+  startLoading();
+});
+
+// LOADING
+function startLoading(){
+  let progress = document.getElementById("progress");
+  let width = 0;
+
+  let interval = setInterval(()=>{
+    width++;
+    progress.style.width = width + "%";
+
+    if(width >= 100){
+      clearInterval(interval);
+
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("app").style.display = "flex";
+    }
+  }, 30);
+}
+
+// MESAJLAR
+socket.on("loadMessages", (msgs)=>{
+  msgs.forEach(addMessage);
+});
+
+socket.on("newMessage", (msg)=>{
+  addMessage(msg);
+});
+
+function send(){
+  const text = document.getElementById("msg").value;
+  if(!text) return;
+
+  socket.emit("sendMessage", text);
+  document.getElementById("msg").value = "";
+}
+
+function addMessage(msg){
+  const div = document.createElement("div");
+  div.classList.add("msg");
+
+  if(msg.user === myName){
+    div.classList.add("me");
+  } else {
+    div.classList.add("other");
+  }
+
+  div.innerText = msg.user + ": " + msg.text;
+
+  document.getElementById("chatBox").appendChild(div);
+}
+</script>
 
 </body>
 </html>
