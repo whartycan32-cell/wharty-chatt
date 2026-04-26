@@ -1,7 +1,6 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const fs = require("fs");
 
 const app = express();
 const server = http.createServer(app);
@@ -9,105 +8,139 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-// DOSYALAR
-const USERS_FILE = "users.json";
-const MSG_FILE = "messages.json";
-const LOG_FILE = "logs.txt";
+let users = {};
+let data = {};
+let online = {};
 
-// VERİLERİ YÜKLE
-let users = fs.existsSync(USERS_FILE)
-  ? JSON.parse(fs.readFileSync(USERS_FILE))
-  : {};
-
-let messages = fs.existsSync(MSG_FILE)
-  ? JSON.parse(fs.readFileSync(MSG_FILE))
-  : [];
-
-// KAYDETME
-function saveUsers() {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-}
-
-function saveMessages() {
-  fs.writeFileSync(MSG_FILE, JSON.stringify(messages, null, 2));
-}
-
-function saveLog(msg) {
-  const line = `[${msg.time}] ${msg.user}: ${msg.text}\n`;
-  fs.appendFileSync(LOG_FILE, line);
-}
-
-// SOCKET
 io.on("connection", (socket) => {
 
-  // KAYIT
+  // REGISTER
   socket.on("register", ({ username, password }) => {
-    if (!username || !password) {
+    if (!username || !password)
       return socket.emit("registerError", "Boş bırakma");
-    }
 
-    if (users[username]) {
-      return socket.emit("registerError", "Bu kullanıcı var");
-    }
+    if (users[username])
+      return socket.emit("registerError", "Zaten var");
 
     users[username] = password;
-    saveUsers();
+
+    data[username] = {
+      friends: [],
+      requests: [],
+      messages: {},
+      avatar: ""
+    };
 
     socket.emit("registerSuccess");
   });
 
-  // GİRİŞ
+  // LOGIN
   socket.on("login", ({ username, password }) => {
-    if (!username || !password) {
-      return socket.emit("loginError", "Boş bırakma");
-    }
-
-    if (!users[username]) {
+    if (!users[username])
       return socket.emit("loginError", "Kullanıcı yok");
-    }
 
-    if (users[username] !== password) {
+    if (users[username] !== password)
       return socket.emit("loginError", "Şifre yanlış");
-    }
 
     socket.username = username;
+    online[username] = true;
 
-    socket.emit("loginSuccess", { username });
-    socket.emit("loadMessages", messages);
+    io.emit("onlineList", Object.keys(online));
+
+    socket.emit("loginSuccess", {
+      username,
+      friends: data[username].friends,
+      requests: data[username].requests,
+      avatar: data[username].avatar
+    });
   });
 
-  // MESAJ GÖNDER
-  socket.on("sendMessage", (text) => {
-    if (!socket.username) return;
+  // DISCONNECT
+  socket.on("disconnect", () => {
+    if (socket.username) {
+      delete online[socket.username];
+      io.emit("onlineList", Object.keys(online));
+    }
+  });
+
+  // AVATAR
+  socket.on("setAvatar", (url) => {
+    data[socket.username].avatar = url;
+  });
+
+  // SEARCH
+  socket.on("searchUser", (q) => {
+    const result = Object.keys(users).filter(u =>
+      u.toLowerCase().includes(q.toLowerCase())
+    );
+    socket.emit("searchResult", result);
+  });
+
+  // FRIEND REQUEST
+  socket.on("sendRequest", (to) => {
+    const from = socket.username;
+
+    if (!data[to]) return;
+
+    if (!data[to].requests.includes(from)) {
+      data[to].requests.push(from);
+    }
+
+    socket.emit("notify", "İstek gönderildi ✔");
+  });
+
+  // ACCEPT
+  socket.on("acceptRequest", (from) => {
+    const user = socket.username;
+
+    data[user].friends.push(from);
+    data[from].friends.push(user);
+
+    data[user].requests =
+      data[user].requests.filter(u => u !== from);
+
+    socket.emit("updateFriends", data[user].friends);
+  });
+
+  // DM
+  socket.on("sendDM", ({ to, text }) => {
+    const from = socket.username;
+    const key = [from, to].sort().join("-");
+
+    if (!data[from].messages[key]) data[from].messages[key] = [];
+    if (!data[to].messages[key]) data[to].messages[key] = [];
 
     const msg = {
-      user: socket.username,
+      from,
       text,
+      seen: false,
       time: new Date().toLocaleTimeString()
     };
 
-    messages.push(msg);
+    data[from].messages[key].push(msg);
+    data[to].messages[key].push(msg);
 
-    saveMessages();
-    saveLog(msg);
+    io.emit("newDM", { key, msg });
+  });
 
-    io.emit("newMessage", msg);
+  socket.on("getDM", (u) => {
+    const key = [socket.username, u].sort().join("-");
+    socket.emit("loadDM", data[socket.username].messages[key] || []);
+  });
+
+  socket.on("seen", (u) => {
+    const key = [socket.username, u].sort().join("-");
+    const msgs = data[socket.username].messages[key] || [];
+
+    msgs.forEach(m => m.seen = true);
+
+    io.emit("seenUpdate", key);
+  });
+
+  socket.on("typing", (to) => {
+    io.emit("typing", { from: socket.username, to });
   });
 
 });
 
-// LOG PANEL (opsiyonel)
-app.get("/admin", (req, res) => {
-  if (req.query.key !== "wharty123") return res.send("Yetkisiz");
-
-  const logs = fs.existsSync(LOG_FILE)
-    ? fs.readFileSync(LOG_FILE, "utf-8")
-    : "Log yok";
-
-  res.send("<pre>" + logs + "</pre>");
-});
-
-// SERVER
-server.listen(3000, () => {
-  console.log("Server çalışıyor...");
-});
+server.listen(3000, () => console.log("Çalışıyor..."));
