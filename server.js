@@ -9,17 +9,21 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
+// DOSYALAR
 const MSG_FILE = "messages.json";
 const LOG_FILE = "logs.txt";
 
+// MESAJLARI YÜKLE
 let messages = fs.existsSync(MSG_FILE)
   ? JSON.parse(fs.readFileSync(MSG_FILE))
   : [];
 
+// KAYDET
 function saveMessages() {
   fs.writeFileSync(MSG_FILE, JSON.stringify(messages, null, 2));
 }
 
+// LOG YAZ
 function saveLog(msg) {
   const line = `[${msg.time}] ${msg.user}: ${msg.text}\n`;
   fs.appendFileSync(LOG_FILE, line);
@@ -43,13 +47,21 @@ io.on("connection", (socket) => {
       time: new Date().toLocaleTimeString()
     };
 
+    // hafızaya ekle
     messages.push(msg);
+
+    // dosyaya kaydet
     saveMessages();
+
+    // log kaydet
     saveLog(msg);
 
+    // herkese gönder
     io.emit("newMessage", msg);
   });
 
 });
 
-server.listen(3000);
+server.listen(3000, () => {
+  console.log("Çalışıyor...");
+});
