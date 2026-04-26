@@ -8,49 +8,51 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORT = 3000;
+app.use(express.static("public"));
 
-app.use(express.static(path.join(__dirname, "public")));
+let users = {};
+let messages = {};
 
-const LOG_FILE = "chatlog.txt";
-
-let messages = [];
-
-function logMessage(msg) {
-  const log = `[${msg.time}] ${msg.username}: ${msg.text}\n`;
-  fs.appendFileSync(LOG_FILE, log);
+function log(msg) {
+  fs.appendFileSync("chatlog.txt", msg + "\n");
 }
 
 io.on("connection", (socket) => {
 
   socket.on("join", (username) => {
     socket.username = username;
+    users[socket.id] = username;
 
-    socket.emit("messageHistory", messages);
-
-    io.emit("systemMessage", `${username} katıldı`);
+    io.emit("userList", Object.values(users));
   });
 
-  socket.on("chatMessage", (text) => {
-    if (!socket.username) return;
+  socket.on("sendDM", ({ to, text }) => {
+    const from = socket.username;
+    if (!from) return;
+
+    const key = [from, to].sort().join("-");
+
+    if (!messages[key]) messages[key] = [];
 
     const msg = {
-      username: socket.username,
+      from,
+      to,
       text,
-      time: new Date().toLocaleTimeString("tr-TR", {
-        hour: "2-digit",
-        minute: "2-digit"
-      })
+      time: new Date().toLocaleTimeString()
     };
 
-    messages.push(msg);
-    logMessage(msg);
+    messages[key].push(msg);
 
-    io.emit("chatMessage", msg);
+    log(`[${msg.time}] ${from} -> ${to}: ${text}`);
+
+    io.emit("receiveDM", msg);
+  });
+
+  socket.on("disconnect", () => {
+    delete users[socket.id];
+    io.emit("userList", Object.values(users));
   });
 
 });
 
-server.listen(PORT, () => {
-  console.log("Çalışıyor: http://localhost:" + PORT);
-});
+server.listen(3000);
