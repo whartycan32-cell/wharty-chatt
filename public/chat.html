@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sohbet</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="app">
+
+  <div class="sidebar" id="users"></div>
+
+  <div class="chat">
+    <div id="chatBox"></div>
+
+    <div class="inputBox">
+      <input id="msg">
+      <button onclick="send()">Gönder</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js"></script>
+
+</body>
+</html>
