@@ -1,25 +1,36 @@
 <!DOCTYPE html>
 <html>
-<body style="display:flex;justify-content:center;align-items:center;height:100vh;">
+<body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;">
+
 <div>
-<h2>Giriş</h2>
-<input id="u"><br><br>
-<input id="p" type="password"><br><br>
-<button onclick="log()">Giriş</button>
-<p id="msg"></p>
+  <h2>Giriş Yap</h2>
+
+  <input id="u" placeholder="Kullanıcı adı"><br><br>
+  <input id="p" type="password" placeholder="Şifre"><br><br>
+
+  <button onclick="login()">Giriş</button>
+
+  <p id="msg"></p>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-const s=io();
-function log(){
-s.emit("login",{username:u.value,password:p.value});
+const s = io();
+
+function login(){
+  s.emit("login",{username:u.value,password:p.value});
 }
+
 s.on("loginSuccess",(d)=>{
-localStorage.setItem("user",d.username);
-location.href="chat.html";
+  localStorage.setItem("user", d.username);
+  location.href="chat.html";
 });
-s.on("loginError",(m)=>msg.innerText=m);
+
+s.on("loginError",(m)=>{
+  msg.style.color="red";
+  msg.innerText=m;
+});
 </script>
+
 </body>
 </html>
