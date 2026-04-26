@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wharty Kayıt</title>
+<title>Wharty</title>
 
 <style>
 body {
@@ -15,51 +15,77 @@ body {
   height:100vh;
 }
 
+/* KUTU */
 .box {
+  width:90%;
+  max-width:350px;
   background:white;
-  padding:30px;
+  padding:25px;
   border-radius:15px;
-  width:300px;
   text-align:center;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
 }
 
+/* INPUT */
 input {
   width:100%;
-  padding:10px;
+  padding:12px;
   margin-top:10px;
   border:none;
   border-radius:10px;
   background:#eee;
+  font-size:14px;
 }
 
+/* BUTON */
 button {
   width:100%;
-  padding:10px;
+  padding:12px;
   margin-top:15px;
   border:none;
   border-radius:10px;
   background:#4caf50;
   color:white;
-  cursor:pointer;
+  font-size:15px;
 }
 
+/* ALT YAZI */
+.switch {
+  margin-top:15px;
+  font-size:14px;
+}
+
+.switch span {
+  color:#4caf50;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+/* MESAJ */
 #msg {
   margin-top:10px;
+  font-size:13px;
 }
 </style>
-</head>
 
+</head>
 <body>
 
 <div class="box">
-  <h2>Kayıt Ol</h2>
+
+  <h2 id="title">Kayıt Ol</h2>
 
   <input id="username" placeholder="Kullanıcı adı">
   <input id="password" type="password" placeholder="Şifre">
 
-  <button onclick="register()">Kayıt Ol</button>
+  <button id="mainBtn" onclick="handle()">Kayıt Ol</button>
+
+  <div class="switch">
+    <span id="switchText">Hesabın var mı? Giriş yap</span>
+  </div>
 
   <p id="msg"></p>
+
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -67,7 +93,10 @@ button {
 <script>
 const socket = io();
 
-function register(){
+let mode = "register"; // register / login
+
+// BUTON
+function handle(){
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
 
@@ -77,19 +106,50 @@ function register(){
     return;
   }
 
-  socket.emit("register", { username, password });
+  if(mode === "register"){
+    socket.emit("register",{username,password});
+  } else {
+    socket.emit("login",{username,password});
+  }
 }
 
+// SWITCH (KAYIT ↔ GİRİŞ)
+switchText.onclick = () => {
+  if(mode === "register"){
+    mode = "login";
+    title.innerText = "Giriş Yap";
+    mainBtn.innerText = "Giriş Yap";
+    switchText.innerText = "Hesabın yok mu? Kayıt ol";
+  } else {
+    mode = "register";
+    title.innerText = "Kayıt Ol";
+    mainBtn.innerText = "Kayıt Ol";
+    switchText.innerText = "Hesabın var mı? Giriş yap";
+  }
+
+  msg.innerText = "";
+};
+
+// KAYIT BAŞARILI
 socket.on("registerSuccess", ()=>{
   msg.innerText = "Kayıt başarılı ✔";
   msg.style.color = "green";
-
-  setTimeout(()=>{
-    window.location.href = "login.html";
-  },1000);
 });
 
+// KAYIT HATA
 socket.on("registerError",(m)=>{
+  msg.innerText = m;
+  msg.style.color = "red";
+});
+
+// GİRİŞ BAŞARILI
+socket.on("loginSuccess",(data)=>{
+  localStorage.setItem("user", data.username);
+  window.location.href = "chat.html";
+});
+
+// GİRİŞ HATA
+socket.on("loginError",(m)=>{
   msg.innerText = m;
   msg.style.color = "red";
 });
