@@ -38,6 +38,19 @@ function saveLog(msg) {
 }
 
 io.on("connection", (socket) => {
+// KAYIT
+socket.on("register", ({ username, password }) => {
+  if (!username || !password)
+    return socket.emit("registerError", "Boş bırakma");
+
+  if (users[username])
+    return socket.emit("registerError", "Zaten var");
+
+  users[username] = password;
+  saveUsers();
+
+  socket.emit("registerSuccess");
+});
 
   // LOGIN
   socket.on("login", ({ username, password }) => {
