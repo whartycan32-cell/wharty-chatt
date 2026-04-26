@@ -1,30 +1,122 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sohbet</title>
-<link rel="stylesheet" href="style.css">
+<style>
+body{margin:0;font-family:sans-serif;background:#f0f2f5;}
+.container{display:flex;height:100vh;}
+.sidebar{width:30%;background:#fff;overflow:auto;}
+.user{display:flex;padding:10px;cursor:pointer;}
+.avatar{width:35px;height:35px;border-radius:50%;background:#4caf50;color:white;display:flex;align-items:center;justify-content:center;margin-right:10px;}
+.chat{flex:1;display:flex;flex-direction:column;}
+#chatBox{flex:1;padding:10px;overflow:auto;display:flex;flex-direction:column;gap:10px;}
+.msg{padding:10px;border-radius:12px;max-width:70%;}
+.me{align-self:flex-end;background:#dcf8c6;}
+.other{align-self:flex-start;background:#eee;}
+.inputBox{display:flex;padding:10px;}
+.inputBox input{flex:1;padding:10px;border-radius:20px;border:none;}
+</style>
 </head>
 
 <body>
 
-<div id="app">
+<audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
 
-  <div class="sidebar" id="users"></div>
+<div class="container">
 
-  <div class="chat">
-    <div id="chatBox"></div>
+<div class="sidebar">
+<input id="search" placeholder="Ara..." oninput="searchUser()">
+<div id="results"></div>
+<hr>
+<div id="friends"></div>
+</div>
 
-    <div class="inputBox">
-      <input id="msg" placeholder="Mesaj yaz">
-      <button onclick="send()">Gönder</button>
-    </div>
-  </div>
+<div class="chat">
+<div id="chatBox"></div>
+
+<div class="inputBox">
+<input id="msg">
+<button onclick="send()">Gönder</button>
+</div>
+</div>
 
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="client.js"></script>
+<script>
+const s=io();
+const user=localStorage.getItem("user");
+
+let current="";
+
+s.emit("login",{username:user,password:"dummy"});
+
+s.on("loginSuccess",(d)=>{
+updateFriends(d.friends);
+
+d.requests.forEach(r=>{
+const el=document.createElement("div");
+el.innerHTML=r+" <button onclick='accept(\""+r+"\")'>Kabul</button>";
+document.body.appendChild(el);
+});
+});
+
+function updateFriends(list){
+friends.innerHTML="";
+list.forEach(u=>{
+const el=document.createElement("div");
+el.className="user";
+el.innerHTML="<div class='avatar'>"+u[0]+"</div>"+u;
+el.onclick=()=>{
+current=u;
+s.emit("getDM",u);
+};
+friends.appendChild(el);
+});
+}
+
+function searchUser(){ s.emit("searchUser",search.value); }
+
+s.on("searchResult",(list)=>{
+results.innerHTML="";
+list.forEach(u=>{
+results.innerHTML+=u+" <button onclick='add(\""+u+"\")'>+</button><br>";
+});
+});
+
+function add(u){ s.emit("sendRequest",u); }
+function accept(u){ s.emit("acceptRequest",u); }
+
+s.on("loadDM",(msgs)=>{
+chatBox.innerHTML="";
+msgs.forEach(addMsg);
+});
+
+s.on("newDM",({key,msg})=>{
+if(current && key.includes(current)){
+addMsg(msg);
+}else{
+sound.play();
+}
+});
+
+function send(){
+if(!msg.value||!current)return;
+s.emit("sendDM",{to:current,text:msg.value});
+msg.value="";
+}
+
+function addMsg(m){
+const d=document.createElement("div");
+d.className="msg";
+
+if(m.from===user)d.classList.add("me");
+else d.classList.add("other");
+
+d.innerText=m.text+(m.seen?" ✔✔":" ✔");
+
+chatBox.appendChild(d);
+}
+</script>
 
 </body>
 </html>
