@@ -7,7 +7,8 @@
 <style>
 body { margin:0; font-family:sans-serif; background:#f0f2f5; }
 
-#login, #loading {
+/* LOGIN */
+#login {
   height:100vh;
   display:flex;
   flex-direction:column;
@@ -15,37 +16,60 @@ body { margin:0; font-family:sans-serif; background:#f0f2f5; }
   align-items:center;
 }
 
-#loading { display:none; }
+input {
+  padding:10px;
+  margin:5px;
+  border:none;
+  border-radius:10px;
+}
 
-.bar { width:200px; height:6px; background:#ddd; border-radius:10px; overflow:hidden; }
-.progress { height:100%; width:0%; background:#4caf50; }
+button {
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:#4caf50;
+  color:white;
+  margin-top:5px;
+}
 
-#app { display:none; height:100vh; }
+#success { color:green; }
+#error { color:red; }
+
+/* LOADING */
+#loading {
+  height:100vh;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+}
+
+.bar {
+  width:200px;
+  height:6px;
+  background:#ddd;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.progress {
+  height:100%;
+  width:0%;
+  background:#4caf50;
+}
+
+/* CHAT */
+#app {
+  display:none;
+  height:100vh;
+}
+
+.container { display:flex; height:100%; }
 
 .sidebar {
   width:30%;
   background:#fff;
-  overflow:auto;
   border-right:1px solid #ddd;
-}
-
-.user {
-  padding:10px;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-}
-
-.avatar {
-  width:35px;
-  height:35px;
-  border-radius:50%;
-  background:#4caf50;
-  color:white;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  margin-right:10px;
 }
 
 .chat {
@@ -63,33 +87,58 @@ body { margin:0; font-family:sans-serif; background:#f0f2f5; }
   gap:10px;
 }
 
-.msg { max-width:70%; padding:10px; border-radius:12px; }
+.msg {
+  max-width:70%;
+  padding:10px;
+  border-radius:12px;
+}
+
 .me { align-self:flex-end; background:#dcf8c6; }
 .other { align-self:flex-start; background:#eee; }
 
-.inputBox { display:flex; padding:10px; }
-.inputBox input { flex:1; padding:10px; border:none; border-radius:20px; }
-.inputBox button { margin-left:10px; }
+.inputBox {
+  display:flex;
+  padding:10px;
+}
 
-.container { display:flex; height:100%; }
+.inputBox input {
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:20px;
+}
+
+.inputBox button {
+  margin-left:10px;
+}
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
 <div id="login">
   <h2>Wharty Sohbet</h2>
+
   <input id="username" placeholder="Kullanıcı adı">
   <input id="password" type="password" placeholder="Şifre">
-  <button onclick="login()">Giriş</button>
+
+  <button onclick="register()">Kayıt Ol</button>
+  <button onclick="login()">Giriş Yap</button>
+
+  <p id="success"></p>
   <p id="error"></p>
 </div>
 
+<!-- LOADING -->
 <div id="loading">
   <h2>Wharty Sohbet Yeri</h2>
-  <div class="bar"><div class="progress" id="progress"></div></div>
+  <div class="bar">
+    <div class="progress" id="progress"></div>
+  </div>
 </div>
 
+<!-- CHAT -->
 <div id="app">
   <div class="container">
     <div class="sidebar" id="friends"></div>
@@ -110,16 +159,35 @@ body { margin:0; font-family:sans-serif; background:#f0f2f5; }
 <script>
 const socket = io();
 let myName = "";
-let currentChat = "";
+
+// KAYIT
+function register(){
+  const username = usernameInput.value;
+  const password = passwordInput.value;
+
+  socket.emit("register",{username,password});
+}
+
+socket.on("registerSuccess",()=>{
+  success.innerText="Başarılı ile kayıt olundu";
+  error.innerText="";
+});
+
+socket.on("registerError",(msg)=>{
+  error.innerText=msg;
+});
 
 // LOGIN
 function login(){
   const username = usernameInput.value;
   const password = passwordInput.value;
+
   socket.emit("login",{username,password});
 }
 
-socket.on("loginError",msg=>error.innerText=msg);
+socket.on("loginError",(msg)=>{
+  error.innerText=msg;
+});
 
 socket.on("loginSuccess",(data)=>{
   myName = data.username;
@@ -128,74 +196,50 @@ socket.on("loginSuccess",(data)=>{
   loading.style.display="flex";
 
   startLoading();
-
-  updateFriends(data.friends);
 });
 
 // LOADING
 function startLoading(){
-  let width=0;
-  let interval=setInterval(()=>{
-    width++;
-    progress.style.width=width+"%";
-    if(width>=100){
-      clearInterval(interval);
+  let w=0;
+  let i=setInterval(()=>{
+    w++;
+    progress.style.width=w+"%";
+
+    if(w>=100){
+      clearInterval(i);
       loading.style.display="none";
       app.style.display="flex";
     }
   },30);
 }
 
-// FRIENDS
-function updateFriends(list){
-  friends.innerHTML="";
-  list.forEach(u=>{
-    const el=document.createElement("div");
-    el.className="user";
-
-    el.innerHTML=`
-      <div class="avatar">${u[0].toUpperCase()}</div>
-      ${u}
-    `;
-
-    el.onclick=()=>{
-      currentChat=u;
-      socket.emit("getDM",u);
-    };
-
-    friends.appendChild(el);
-  });
-}
-
-// DM
-socket.on("loadDM",(msgs)=>{
-  chatBox.innerHTML="";
+// CHAT
+socket.on("loadMessages",(msgs)=>{
   msgs.forEach(addMessage);
 });
 
-socket.on("newDM",({key,msg})=>{
-  if(currentChat && key.includes(currentChat)){
-    addMessage(msg);
-  }
+socket.on("newMessage",(msg)=>{
+  addMessage(msg);
 });
 
 function send(){
-  const text=msg.value;
-  if(!text || !currentChat) return;
+  const text = msg.value;
+  if(!text) return;
 
-  socket.emit("sendDM",{to:currentChat,text});
+  socket.emit("sendMessage",text);
   msg.value="";
 }
 
 function addMessage(m){
-  const div=document.createElement("div");
-  div.classList.add("msg");
+  const d=document.createElement("div");
+  d.classList.add("msg");
 
-  if(m.from===myName) div.classList.add("me");
-  else div.classList.add("other");
+  if(m.user===myName) d.classList.add("me");
+  else d.classList.add("other");
 
-  div.innerText=m.text;
-  chatBox.appendChild(div);
+  d.innerText = m.user + ": " + m.text;
+
+  chatBox.appendChild(d);
 }
 </script>
 
