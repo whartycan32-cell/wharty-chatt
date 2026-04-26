@@ -1,35 +1,92 @@
 <!DOCTYPE html>
 <html>
-<body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kayıt</title>
 
-<div>
+<style>
+body {
+  margin:0;
+  font-family:sans-serif;
+  background:linear-gradient(135deg,#4caf50,#2e7d32);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.box {
+  background:white;
+  padding:30px;
+  border-radius:20px;
+  width:90%;
+  max-width:350px;
+  text-align:center;
+}
+
+input {
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:#eee;
+}
+
+button {
+  width:100%;
+  padding:12px;
+  margin-top:15px;
+  border:none;
+  border-radius:10px;
+  background:#4caf50;
+  color:white;
+  font-size:16px;
+}
+
+.switch {
+  margin-top:15px;
+  font-size:14px;
+}
+
+.switch span {
+  color:#4caf50;
+  cursor:pointer;
+}
+
+#msg { margin-top:10px; }
+</style>
+</head>
+
+<body>
+
+<div class="box">
   <h2>Kayıt Ol</h2>
 
-  <input id="u" placeholder="Kullanıcı adı"><br><br>
-  <input id="p" type="password" placeholder="Şifre"><br><br>
+  <input id="u" placeholder="Kullanıcı adı">
+  <input id="p" type="password" placeholder="Şifre">
 
-  <button onclick="register()">Kayıt Ol</button>
+  <button onclick="reg()">Kayıt Ol</button>
 
   <p id="msg"></p>
 
-  <p>
+  <div class="switch">
     Hesabın var mı?
-    <span onclick="goLogin()" style="color:green;cursor:pointer;">Giriş yap</span>
-  </p>
+    <span onclick="goLogin()">Giriş yap</span>
+  </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
 const s = io();
 
-function register(){
+function reg(){
   s.emit("register",{username:u.value,password:p.value});
 }
 
 s.on("registerSuccess",()=>{
   msg.style.color="green";
   msg.innerText="Kayıt başarılı ✔";
-
   setTimeout(()=>location.href="login.html",1000);
 });
 
