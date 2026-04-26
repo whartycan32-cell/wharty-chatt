@@ -1,78 +1,79 @@
 body {
   margin:0;
   font-family:sans-serif;
-  background:#0b1f14;
-  color:white;
+  background:#f0f2f5;
+  color:black;
 }
 
-/* ANA YAPI */
-#app {
-  display:flex;
+/* LOADING */
+#loading {
   height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
 }
 
-/* SOL PANEL */
-.sidebar {
-  width:30%;
-  background:#111b21;
-  overflow:auto;
-  border-right:1px solid #1f2c33;
+.bar {
+  width:220px;
+  height:6px;
+  background:#ddd;
+  border-radius:10px;
+  overflow:hidden;
+  margin-top:15px;
 }
 
-.user {
-  padding:15px;
-  border-bottom:1px solid #1f2c33;
-  cursor:pointer;
-}
-
-.user:hover {
-  background:#202c33;
+.progress {
+  height:100%;
+  width:0%;
+  background:#4caf50;
 }
 
 /* CHAT */
-.chat {
-  flex:1;
+.hidden { display:none; }
+
+#app {
+  max-width:700px;
+  margin:auto;
+  height:100vh;
   display:flex;
   flex-direction:column;
-  background:#0b141a;
+  background:white;
 }
 
 /* MESAJ ALANI */
 #chatBox {
   flex:1;
-  padding:15px;
+  padding:20px;
   overflow:auto;
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:10px;
 }
 
-/* BALONCUKLAR */
+/* BALON */
 .msg {
   max-width:70%;
-  padding:10px 12px;
-  border-radius:12px;
-  word-wrap:break-word;
+  padding:10px 14px;
+  border-radius:16px;
   font-size:14px;
-}
-
-/* KARŞI TARAF */
-.msg.other {
-  background:#202c33;
-  align-self:flex-start;
 }
 
 /* SEN */
 .msg.me {
-  background:#005c4b;
   align-self:flex-end;
+  background:#dcf8c6;
 }
 
-/* SAAT */
+/* KARŞI */
+.msg.other {
+  align-self:flex-start;
+  background:#eeeeee;
+}
+
 .time {
   font-size:10px;
-  opacity:0.7;
-  margin-top:4px;
+  opacity:0.6;
   text-align:right;
 }
 
@@ -80,7 +81,7 @@ body {
 .inputBox {
   display:flex;
   padding:10px;
-  background:#111b21;
+  border-top:1px solid #ddd;
 }
 
 .inputBox input {
@@ -88,8 +89,7 @@ body {
   padding:10px;
   border:none;
   border-radius:20px;
-  background:#202c33;
-  color:white;
+  background:#f0f2f5;
 }
 
 .inputBox button {
@@ -97,10 +97,6 @@ body {
   padding:10px 15px;
   border:none;
   border-radius:20px;
-  background:#25d366;
-}
-
-/* MOBİL */
-@media(max-width:768px){
-  .sidebar { width:40%; }
+  background:#4caf50;
+  color:white;
 }
