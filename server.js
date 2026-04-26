@@ -13,7 +13,6 @@ let messages = [];
 
 io.on("connection", (socket) => {
 
-  // KAYIT
   socket.on("register", ({ username, password }) => {
     if (!username || !password)
       return socket.emit("registerError", "Boş bırakma");
@@ -22,11 +21,9 @@ io.on("connection", (socket) => {
       return socket.emit("registerError", "Bu kullanıcı var");
 
     users[username] = password;
-
     socket.emit("registerSuccess");
   });
 
-  // GİRİŞ
   socket.on("login", ({ username, password }) => {
     if (!users[username])
       return socket.emit("loginError", "Kullanıcı yok");
@@ -40,15 +37,10 @@ io.on("connection", (socket) => {
     socket.emit("loadMessages", messages);
   });
 
-  // MESAJ
   socket.on("sendMessage", (text) => {
     if (!socket.username) return;
 
-    const msg = {
-      user: socket.username,
-      text
-    };
-
+    const msg = { user: socket.username, text };
     messages.push(msg);
 
     io.emit("newMessage", msg);
@@ -56,4 +48,4 @@ io.on("connection", (socket) => {
 
 });
 
-server.listen(3000, () => console.log("Çalışıyor"));
+server.listen(3000, () => console.log("Server çalışıyor"));
