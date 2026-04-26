@@ -5,23 +5,35 @@
 <title>Wharty Chat</title>
 <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div id="loginScreen">
-  <div class="loginBox">
-    <h2>Adın ne?</h2>
-    <input id="username" placeholder="İsmini yaz">
-    <button onclick="join()">Giriş</button>
-  </div>
+<!-- LOGIN -->
+<div id="login">
+  <h1>Özel Sohbet Programı</h1>
+  <input id="name" placeholder="İsmini yaz">
+  <button onclick="enter()">Giriş</button>
 </div>
 
-<div id="chatApp" class="hidden">
-  <div id="messages"></div>
+<!-- LOADING -->
+<div id="loading" class="hidden">
+  <h2>Sohbetleriniz yükleniyor...</h2>
+</div>
 
-  <div class="messageBox">
-    <input id="msg" placeholder="Mesaj yaz...">
-    <button onclick="send()">Gönder</button>
+<!-- CHAT -->
+<div id="app" class="hidden">
+
+  <div class="sidebar" id="users"></div>
+
+  <div class="chat">
+    <div id="chatBox"></div>
+
+    <div class="inputBox">
+      <input id="msg">
+      <button onclick="send()">Gönder</button>
+    </div>
   </div>
+
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
